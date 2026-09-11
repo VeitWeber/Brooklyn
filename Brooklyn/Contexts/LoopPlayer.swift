@@ -11,6 +11,11 @@ import AVFoundation
 // MARK: - LoopPlayer
 final class LoopPlayer: AVQueuePlayer {
     
+    // Tracks ObjectIdentifiers of items that belong to this player instance,
+    // so we can filter out AVPlayerItemDidPlayToEndTime notifications from other
+    // LoopPlayer instances (e.g. screensaver preview + main display, multi-monitor).
+    private var managedItemIDs: Set<ObjectIdentifier> = []
+
     // MARK: Lifecycle
     init(items: [Animation], numberOfLoops: Int, shouldRandomize: Bool) {
         let items = (shouldRandomize ? items.shuffled() : items)
@@ -21,13 +26,13 @@ final class LoopPlayer: AVQueuePlayer {
             .prepareForQueue()
         
         super.init(items: items)
+        items.forEach { managedItemIDs.insert(ObjectIdentifier($0)) }
         observe()
     }
     
     override init() {
         super.init()
     }
-    
     
     deinit {
         unobserve()
@@ -37,11 +42,19 @@ final class LoopPlayer: AVQueuePlayer {
 // MARK: - Actions
 extension LoopPlayer {
     
+    func stop() {
+        managedItemIDs.removeAll()
+        removeAllItems()
+    }
+
     func play(_ animation: Animation) {
         guard let item = AVPlayerItem(video: animation, extension: .mp4, for: LoopPlayer.self) else { return }
         actionAtItemEnd = .none
+        managedItemIDs.removeAll()
         removeAllItems()
-        [item].prepareForQueue().forEach {
+        let prepared = [item].prepareForQueue()
+        prepared.forEach {
+            managedItemIDs.insert(ObjectIdentifier($0))
             insert($0, after: items().last)
         }
         actionAtItemEnd = .advance
@@ -53,7 +66,7 @@ private extension LoopPlayer {
     
     func observe() {
         NotificationCenter.default.addObserver(self,
-                                               selector: #selector(playerItemDidFinish),
+                                               selector: #selector(playerItemDidFinish(_:)),
                                                name: NSNotification.Name.AVPlayerItemDidPlayToEndTime,
                                                object: nil)
     }
@@ -65,9 +78,13 @@ private extension LoopPlayer {
     }
     
     @objc
-    func playerItemDidFinish() {
-        guard let currentItemCopy = currentItem?.copy() as? AVPlayerItem else { return }
-        insert(currentItemCopy, after: items().last)
+    func playerItemDidFinish(_ notification: Notification) {
+        guard let finishedItem = notification.object as? AVPlayerItem,
+              managedItemIDs.contains(ObjectIdentifier(finishedItem)) else { return }
+        managedItemIDs.remove(ObjectIdentifier(finishedItem))
+        guard let itemCopy = currentItem?.copy() as? AVPlayerItem else { return }
+        managedItemIDs.insert(ObjectIdentifier(itemCopy))
+        insert(itemCopy, after: items().last)
     }
 }
 
