@@ -1,3 +1,11 @@
+> [!NOTE]
+> This is a fork of [pedrommcarrasco/Brooklyn](https://github.com/pedrommcarrasco/Brooklyn). Release `2.2.0` adds:
+> - Universal 2 support for native Apple Silicon and Intel Macs.
+> - Reliable screensaver termination on macOS Sonoma and later, avoiding zombie processes and excess CPU usage.
+> - Proper video player and hardware decoder cleanup, preventing resource and memory leaks.
+>
+> Many thanks to [Pedro Carrasco](https://github.com/pedrommcarrasco) for creating and open-sourcing Brooklyn.
+
 **Brooklyn is not actively maintained, as it doesn’t generate income to justify the time investment. If you need a bug fixed, feel free to contact the author via email to discuss having it resolved for a fee.**
 
 ![](https://github.com/pedrommcarrasco/Brooklyn/blob/master/Design/logo.jpg?raw=true)
@@ -35,7 +43,7 @@ defaults -currentHost write com.apple.screensaver moduleDict -dict moduleName Br
 
 ### Manual :hand:
 
-1. [Click here to Download](https://github.com/pedrommcarrasco/Brooklyn/releases/download/2.1.0/Brooklyn.saver.zip)
+1. [Click here to Download](https://github.com/iF2007/Brooklyn/releases/download/2.2.0/Brooklyn.saver.zip)
 2. Open **Brooklyn.saver** (double click)
 3. `"Brooklyn.saver" can't be opened because it is from an unidentified developer` will appear, press `OK`
 4. Open `Preferences`
