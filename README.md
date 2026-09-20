@@ -3,6 +3,7 @@
 > - Universal 2 support for native Apple Silicon and Intel Macs.
 > - Reliable screensaver termination on macOS Sonoma and later, avoiding zombie processes and excess CPU usage.
 > - Proper video player and hardware decoder cleanup, preventing resource and memory leaks.
+> Verified working in practice on macOS 27 with Apple Silicon MacBook Pro (M1 Pro) and MacBook Air (M5).
 >
 > Many thanks to [Pedro Carrasco](https://github.com/pedrommcarrasco) for creating and open-sourcing Brooklyn.
 
