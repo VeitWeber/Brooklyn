@@ -1,108 +1,100 @@
 > [!NOTE]
-> This is a fork of [pedrommcarrasco/Brooklyn](https://github.com/pedrommcarrasco/Brooklyn). Release `2.2.0` adds:
-> - Universal 2 support for native Apple Silicon and Intel Macs.
-> - Reliable screensaver termination on macOS Sonoma and later, avoiding zombie processes and excess CPU usage.
-> - Proper video player and hardware decoder cleanup, preventing resource and memory leaks.
-> Verified working in practice on macOS 27 with Apple Silicon MacBook Pro (M1 Pro) and MacBook Air (M5).
+> This is a fork of [iF2007/Brooklyn](https://github.com/iF2007/Brooklyn), which is itself a fork of the original [pedrommcarrasco/Brooklyn](https://github.com/pedrommcarrasco/Brooklyn).
 >
-> Many thanks to [Pedro Carrasco](https://github.com/pedrommcarrasco) for creating and open-sourcing Brooklyn.
+> Brooklyn was created and open-sourced by [Pedro Carrasco](https://github.com/pedrommcarrasco). The fixes for macOS Sonoma and later in release `2.2.0` (clean screen saver termination, player cleanup, Universal 2 build) were made by [iF2007](https://github.com/iF2007). See [Changes in this fork](#changes-in-this-fork) for what was added on top.
 
-**Brooklyn is not actively maintained, as it doesn’t generate income to justify the time investment. If you need a bug fixed, feel free to contact the author via email to discuss having it resolved for a fee.**
-
-![](https://github.com/pedrommcarrasco/Brooklyn/blob/master/Design/logo.jpg?raw=true)
+![](Design/logo.jpg)
 
 > Screen Saver by [Pedro Carrasco](https://twitter.com/pedrommcarrasco) based on the animations presented during **[Apple Special Event](https://www.youtube.com/watch?v=bfHEnw6Rm-4)** (October 30, 2018) from the Brooklyn Academy of Music, Howard Gilman Opera House.
 
 <p align="center">
-    <img src="https://github.com/pedrommcarrasco/Brooklyn/blob/master/Design/showcase.gif?raw=true" alt="Example"/>
+    <img src="Design/showcase.gif" alt="Example"/>
 </p>
-
-![GitHub All Releases](https://img.shields.io/github/downloads/pedrommcarrasco/brooklyn/total.svg) [![Build Status](https://travis-ci.org/pedrommcarrasco/Brooklyn.svg?branch=master)](https://travis-ci.org/pedrommcarrasco/Brooklyn) ![GitHub contributors](https://img.shields.io/github/contributors/pedrommcarrasco/brooklyn.svg) [![apm](https://img.shields.io/apm/l/vim-mode.svg)](https://github.com/pedrommcarrasco/Brooklyn/blob/master/LICENSE)
 
 ## Features ✅
 
 * Doesn't require internet connection
-* Homebrew support
 * Light & Dark theme
 * Select which animations you want to see
 * Loop each animation how many times you want
 * Make the animations' order random
 
 <p align="center">
-    <img src="https://github.com/pedrommcarrasco/Brooklyn/blob/master/Design/preferenceMenu.png?raw=true" alt="Example"/>
+    <img src="Design/preferenceMenu.png" alt="Example"/>
 </p>
+
+## Changes in this fork
+
+Version `2.3.0` builds on iF2007's `2.2.0` and was written for macOS 27:
+
+* **Playback restarts cleanly.** The player is rebuilt whenever the screen saver starts. Before, stopping emptied the queue, so a restart on the same view (the preview in System Settings) stayed black. Changed options now also apply on the next start.
+* **Looping re-queues the right clip.** The clip that actually finished is appended again, and the queue is only changed on the main thread.
+* **Background instances are ended more reliably.** When the screen saver stops, the host process is ended with `exit(0)`. Full-size views are covered even when macOS reports `isPreview` incorrectly.
+* **Options sheet.** The preview stops playing when the sheet is closed.
+* **Project.** Deployment target macOS 14.0, Swift 5 for all targets, bundle identifier typo fixed (`com.pedrommcarrasco.brooklyn`), the original author's signing team removed, in-app links point to this fork, unused Sparkle keys and the leftover Travis CI and CocoaPods files removed.
+
+> [!IMPORTANT]
+> These changes have not been built or tested on a Mac yet. Build the screen saver and check its behaviour before relying on it.
 
 ## Installation 📦
 
-Independently of how you install **Brooklyn**, please **close your System Preferences**.
+This fork does not publish a prebuilt binary, so the screen saver is built from source with Xcode.
 
-Screen savers can be set programmatically with this Terminal command :
+1. Close **System Settings**.
+2. Build the screen saver:
 
-```shell
-defaults -currentHost write com.apple.screensaver moduleDict -dict moduleName Brooklyn path "$HOME/Library/Screen Savers/Brooklyn.saver"
-```
+   ```shell
+   xcodebuild -project Brooklyn.xcodeproj -scheme Brooklyn -configuration Release -derivedDataPath /tmp/brooklyn-build build
+   ```
 
-### Manual :hand:
+3. Install it for the current user:
 
-1. [Click here to Download](https://github.com/iF2007/Brooklyn/releases/download/2.2.0/Brooklyn.saver.zip)
-2. Open **Brooklyn.saver** (double click)
-3. `"Brooklyn.saver" can't be opened because it is from an unidentified developer` will appear, press `OK`
-4. Open `Preferences`
-5. Select `Security & Privacy`
-6. Select `General`
-7. On the bottom side, select `Open Anyway`
+   ```shell
+   mkdir -p ~/"Library/Screen Savers"
+   rm -rf ~/"Library/Screen Savers/Brooklyn.saver"
+   cp -R /tmp/brooklyn-build/Build/Products/Release/Brooklyn.saver ~/"Library/Screen Savers/"
+   ```
 
-### Homebrew 🍺
+4. Select **Brooklyn** in **System Settings > Wallpaper > Screen Saver** (on macOS 14 and 15: **System Settings > Screen Saver**).
 
-1. Open terminal
-2. Enter `brew install --cask brooklyn --no-quarantine`
+A bundle built on your own Mac is not quarantined, so macOS does not block it.
+
+### Prebuilt binaries from the original repositories
+
+These do not contain the changes of this fork:
+
+* `2.2.0` from [iF2007/Brooklyn](https://github.com/iF2007/Brooklyn/releases)
+* `2.1.0` from [pedrommcarrasco/Brooklyn](https://github.com/pedrommcarrasco/Brooklyn/releases)
+
+They are not notarized, so macOS blocks them when they are opened for the first time. Allow them with `Open Anyway` in **System Settings > Privacy & Security**.
 
 ## Uninstallation 🗑️
 
-### Manual :hand:
-
-- Right-click on Brooklyn in System Preferences and select `Delete Brooklyn`, or
-- Delete `Brooklyn.saver` either in `/Library/Screen Savers` or `/Users/USERNAME/Library/Screen Savers`. 
-
-### Homebrew 🍺
-
-1. Open terminal
-2. Enter `brew uninstall --cask brooklyn`
+Delete `Brooklyn.saver` either in `/Library/Screen Savers` or `/Users/USERNAME/Library/Screen Savers`.
 
 ## Compatibility 🔧
 
-Requires OS X El Capitan (10.11) or above.
+Requires macOS 14 (Sonoma) or above.
 
 ## Troubleshooting 🤕
 
-The Brooklyn screen saver can be blocked by the system as a malicious software. Sometimes on macOS Big Sur clicking `Open Anyway` in `Security & Privacy` is not fixing the issue.  
-
-To bypass this quarantine made by apple, you can use this command in your terminal :
+A downloaded `Brooklyn.saver` can stay blocked even after clicking `Open Anyway`. In that case, remove the quarantine attribute from the bundle:
 
 ```shell
-sudo xattr -d com.apple.quarantine ~/"Library/Screen Savers/Brooklyn.saver"
+xattr -d com.apple.quarantine ~/"Library/Screen Savers/Brooklyn.saver"
 ```
 
-## Support Brooklyn ❤️
+## Credits ❤️
 
-Hello there 👋
+* Original project: [pedrommcarrasco/Brooklyn](https://github.com/pedrommcarrasco/Brooklyn) by Pedro Carrasco. According to its README, it is no longer actively maintained.
+* Fork with the fixes for macOS Sonoma and later: [iF2007/Brooklyn](https://github.com/iF2007/Brooklyn)
 
-I’m Pedro, a Portuguese iOS Engineer since February 2017. I’m an avid OSS enthusiast and contributor - help by sharing, learn by what’s shared.
+If you enjoy Brooklyn, please consider supporting its author Pedro:
 
-I've built and open-sourced multiple frameworks and applications, including **[Brooklyn](https://github.com/pedrommcarrasco/Brooklyn)** and **[CocoaHub](https://cocoahub.app)**.
-
-I'm also a conference and meetup organizer, being part of **[SwiftAveiro](https://swiftaveiro.xyz)** and **[CocoaHeads Porto](https://www.meetup.com/CocoaHeads-Porto/)**.
-
-If you enjoy my work and would like to help me continue it, please consider:
 * https://github.com/users/pedrommcarrasco/sponsorship
 * https://www.buymeacoffee.com/pedrommcarrasco
 * https://www.paypal.me/pedrommcarrasco
 
-
-## Contributing  🙌 
-
-Feel free to contribute to this project by providing [ideas](https://github.com/pedrommcarrasco/Brooklyn/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) or opening [pull requests](https://github.com/pedrommcarrasco/Brooklyn/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-desc) with new features or solving an existing issue.
-
 ## License ⛔
 
-Brooklyn's available under the MIT license. See the [LICENSE](https://github.com/pedrommcarrasco/Brooklyn/blob/master/LICENSE) file for more information. Logo & original animations are Apple's property.
+Brooklyn's available under the MIT license. See the [LICENSE](LICENSE) file for more information. Logo & original animations are Apple's property.
