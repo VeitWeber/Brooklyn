@@ -14,7 +14,6 @@ import AVKit
 final class BrooklynManager {
     
     private enum Constant {
-        static let bundleId = "oedrommcarrasco.brooklyn"
         static let versionKey = "CFBundleShortVersionString"
     }
     
@@ -47,13 +46,9 @@ final class BrooklynManager {
     }
     
     lazy var currentVersion: String = {
-        // We are running from the Brooklyn screensaver itself
-        if let screensaverBundle = Bundle(identifier: Constant.bundleId) {
-            return screensaverBundle.infoDictionary?[Constant.versionKey] as? String ?? ""
-        } else {
-            // We are running from canvas, lets return the version number from there...just to return something
-            return Bundle.main.infoDictionary?[Constant.versionKey] as? String ?? ""
-        }
+        // The bundle this class was loaded from: Brooklyn.saver, or Canvas when running from there
+        let bundle = Bundle(for: BrooklynManager.self)
+        return bundle.infoDictionary?[Constant.versionKey] as? String ?? ""
     }()
 }
 

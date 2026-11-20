@@ -84,6 +84,20 @@ private extension PreferencesWindowController {
     }
 }
 
+// MARK: - Preview
+extension PreferencesWindowController {
+    
+    // The window is reused between presentations and doneAction pauses the preview
+    func resumePreview() {
+        manager.player.play()
+    }
+    
+    // NSWindowDelegate, covers hosts that keep the window instead of asking for it again
+    func windowDidBecomeKey(_ notification: Notification) {
+        resumePreview()
+    }
+}
+
 // MARK: - NSTableViewDataSource
 extension PreferencesWindowController: NSTableViewDataSource {
     
@@ -107,6 +121,7 @@ extension PreferencesWindowController: NSTableViewDelegate {
         guard let selectedAnimation = manager.availableAnimations[safe: animationsTableView.selectedRow] else { return }
         previewLabel.stringValue = selectedAnimation.name
         manager.player.play(selectedAnimation)
+        manager.player.play()
     }
 }
 
@@ -139,6 +154,7 @@ private extension PreferencesWindowController {
     
     @IBAction func doneAction(_ sender: NSButton) {
         animationsTableView.deselectAll(nil)
+        manager.player.pause()
         guard let window = window else { return }
         window.sheetParent?.endSheet(window)
     }

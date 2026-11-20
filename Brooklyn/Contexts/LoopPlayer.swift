@@ -21,7 +21,7 @@ final class LoopPlayer: AVQueuePlayer {
         let items = (shouldRandomize ? items.shuffled() : items)
             .reduce(into: [AVPlayerItem]()) {
                 guard let item = AVPlayerItem(video: $1, extension: .mp4, for: LoopPlayer.self) else { return }
-                $0.append(contentsOf: Array(copy: item, count: numberOfLoops))
+                $0.append(contentsOf: Array(copy: item, count: max(0, numberOfLoops)))
             }
             .prepareForQueue()
         
@@ -79,12 +79,24 @@ private extension LoopPlayer {
     
     @objc
     func playerItemDidFinish(_ notification: Notification) {
-        guard let finishedItem = notification.object as? AVPlayerItem,
-              managedItemIDs.contains(ObjectIdentifier(finishedItem)) else { return }
-        managedItemIDs.remove(ObjectIdentifier(finishedItem))
-        guard let itemCopy = currentItem?.copy() as? AVPlayerItem else { return }
+        guard let finishedItem = notification.object as? AVPlayerItem else { return }
+        // AVFoundation may post this on another thread, the queue is only changed on the main thread
+        if Thread.isMainThread {
+            requeue(finishedItem)
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.requeue(finishedItem)
+            }
+        }
+    }
+    
+    func requeue(_ finishedItem: AVPlayerItem) {
+        // Items of other LoopPlayer instances in the same host process are not ours to loop
+        guard managedItemIDs.remove(ObjectIdentifier(finishedItem)) != nil else { return }
+        // Append the item that finished. By now currentItem can already be the next one in the queue.
+        guard let itemCopy = finishedItem.copy() as? AVPlayerItem else { return }
         managedItemIDs.insert(ObjectIdentifier(itemCopy))
-        insert(itemCopy, after: items().last)
+        insert(itemCopy, after: nil)
     }
 }
 
