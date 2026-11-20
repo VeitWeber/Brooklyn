@@ -252,6 +252,20 @@ DQ
                             <action selector="twitterAction:" target="-2" id="6uX-2G-vQs"/>
                         </connections>
                     </button>
+                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="PkB-ut-T0n">
+                        <rect key="frame" x="434" y="48" width="350" height="20"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="20" id="PkH-ei-G0t"/>
+                        </constraints>
+                        <buttonCell key="cell" type="square" title="pikodat.com" bezelStyle="shadowlessSquare" image="website" imagePosition="left" alignment="left" scrollable="YES" lineBreakMode="clipping" imageScaling="proportionallyDown" inset="2" id="PkC-el-L0c">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <color key="contentTintColor" name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                        <connections>
+                            <action selector="websiteAction:" target="-2" id="PkA-ct-I0n"/>
+                        </connections>
+                    </button>
                     <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="AJd-fC-cWE">
                         <rect key="frame" x="434" y="104" width="350" height="20"/>
                         <constraints>
@@ -342,6 +356,9 @@ DQ
                     <constraint firstItem="SpV-al-U3e" firstAttribute="leading" secondItem="SpS-li-D3r" secondAttribute="trailing" constant="8" id="SpC-o5-N5s"/>
                     <constraint firstItem="SpV-al-U3e" firstAttribute="centerY" secondItem="SpL-ab-E1l" secondAttribute="centerY" id="SpC-o6-N6s"/>
                     <constraint firstItem="SpV-al-U3e" firstAttribute="trailing" secondItem="dkX-KT-WfU" secondAttribute="trailing" id="SpC-o7-N7s"/>
+                    <constraint firstItem="PkB-ut-T0n" firstAttribute="top" secondItem="w0R-LT-WzY" secondAttribute="bottom" constant="8" id="PkC-o1-N1s"/>
+                    <constraint firstItem="PkB-ut-T0n" firstAttribute="leading" secondItem="w0R-LT-WzY" secondAttribute="leading" id="PkC-o2-N2s"/>
+                    <constraint firstItem="PkB-ut-T0n" firstAttribute="trailing" secondItem="w0R-LT-WzY" secondAttribute="trailing" id="PkC-o3-N3s"/>
                     <constraint firstItem="d8w-bT-mmB" firstAttribute="leading" secondItem="tdt-p9-Ns2" secondAttribute="trailing" constant="4" id="00x-4O-WQ9"/>
                     <constraint firstItem="w0R-LT-WzY" firstAttribute="trailing" secondItem="AJd-fC-cWE" secondAttribute="trailing" id="0Y4-w3-dZe"/>
                     <constraint firstItem="Gwy-W7-7Lu" firstAttribute="leading" secondItem="U06-cj-0bE" secondAttribute="leading" id="1m7-ck-rHR"/>
@@ -370,7 +387,7 @@ DQ
                     <constraint firstItem="AJd-fC-cWE" firstAttribute="leading" secondItem="QPA-Ty-yka" secondAttribute="leading" id="X2j-Q4-soD"/>
                     <constraint firstItem="tdt-p9-Ns2" firstAttribute="centerY" secondItem="fah-n6-w7f" secondAttribute="centerY" id="XbY-4j-RI5"/>
                     <constraint firstItem="HtL-Vo-NVn" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="16" id="Xbr-D2-Sdp"/>
-                    <constraint firstItem="czd-mF-Tcj" firstAttribute="top" secondItem="w0R-LT-WzY" secondAttribute="bottom" constant="8" id="XlQ-mn-9bx"/>
+                    <constraint firstItem="czd-mF-Tcj" firstAttribute="top" secondItem="PkB-ut-T0n" secondAttribute="bottom" constant="8" id="XlQ-mn-9bx"/>
                     <constraint firstItem="dkX-KT-WfU" firstAttribute="centerY" secondItem="U06-cj-0bE" secondAttribute="centerY" id="Y4s-N9-LXr"/>
                     <constraint firstAttribute="trailing" secondItem="eY6-hS-6X6" secondAttribute="trailing" constant="16" id="Z2E-LR-w91"/>
                     <constraint firstItem="Eql-OE-qtq" firstAttribute="top" secondItem="g1H-Cn-yWz" secondAttribute="bottom" constant="16" id="bWv-Wr-5uH"/>
@@ -403,5 +420,6 @@ DQ
         <image name="github" width="60" height="40"/>
         <image name="twitter" width="60" height="40"/>
         <image name="version" width="60" height="40"/>
+        <image name="website" width="60" height="40"/>
     </resources>
 </document>

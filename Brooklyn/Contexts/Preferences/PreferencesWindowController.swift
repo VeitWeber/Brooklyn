@@ -164,6 +164,10 @@ private extension PreferencesWindowController {
         URLType.twitter.open()
     }
     
+    @IBAction func websiteAction(_ sender: NSButton) {
+        URLType.website.open()
+    }
+    
     @IBAction func versionAction(_ sender: NSButton) {
         URLType.version.open()
     }

@@ -34,7 +34,7 @@ Version `2.3.0` builds on iF2007's `2.2.0` and was written for macOS 27:
 * **Video layout.** The video is laid out against the window instead of the frame the view was created with, which can belong to another display.
 * **Playback speed.** A slider in the options sets the speed of the animations from 0.1x to 2.0x, the preview in the sheet follows it.
 * **Options sheet.** The preview stops playing when the sheet is closed.
-* **Project.** Deployment target macOS 14.0, Swift 5 for all targets, bundle identifier typo fixed (`com.pedrommcarrasco.brooklyn`), the original author's signing team removed, in-app links point to this fork, unused Sparkle keys and the leftover Travis CI and CocoaPods files removed.
+* **Project.** Deployment target macOS 14.0, Swift 5 for all targets, bundle identifier typo fixed (`com.pedrommcarrasco.brooklyn`), the original author's signing team removed, in-app links point to this fork, a link to pikodat.com added, unused Sparkle keys and the leftover Travis CI and CocoaPods files removed.
 
 > [!IMPORTANT]
 > These changes have not been built or tested on a Mac yet. Build the screen saver and check its behaviour before relying on it.
