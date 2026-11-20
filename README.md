@@ -28,7 +28,7 @@
 
 Version `2.3.0` builds on iF2007's `2.2.0` and was written for macOS 27:
 
-* **Playback restarts cleanly.** The player is rebuilt whenever the screen saver starts. Before, stopping emptied the queue, so a restart on the same view (the preview in System Settings) stayed black. Changed options now also apply on the next start.
+* **Playback restarts cleanly.** The player is rebuilt whenever the screen saver starts. Before, stopping emptied the queue, so a restart on the same view (the preview in System Settings) stayed black. Running views check the stored options once a second, so changes apply right away.
 * **Looping re-queues the right clip.** The clip that actually finished is appended again, and the queue is only changed on the main thread.
 * **Background instances are ended more reliably.** When the screen saver stops, the host process is ended with `exit(0)`. While System Settings is open, playback is only stopped instead, so the preview and the Options button keep their host process.
 * **Video layout.** The video is laid out against the window instead of the frame the view was created with, which can belong to another display.

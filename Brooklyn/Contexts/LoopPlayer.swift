@@ -16,14 +16,27 @@ final class LoopPlayer: AVQueuePlayer {
     // LoopPlayer instances (e.g. screensaver preview + main display, multi-monitor).
     private var managedItemIDs: Set<ObjectIdentifier> = []
     
+    private enum Constant {
+        // Per item, so a rate that an item cannot play does not end in a loop of corrections
+        static let maxRateCorrections = 3
+        // Only the first items of a player are logged
+        static let loggedItems = 4
+    }
+    
+    private var rateCorrections = 0
+    private var loggedItems = 0
+    private var currentItemObservation: NSKeyValueObservation?
+    
     // Speed of everything this player plays. A running player switches at once,
     // a paused one uses it the next time play() is called.
     var playbackRate: Float = 1.0 {
         didSet {
+            rateCorrections = 0
             defaultRate = playbackRate
             if rate != 0 {
                 rate = playbackRate
             }
+            Log.trace("player: wanted rate \(playbackRate), rate now \(rate)")
         }
     }
 
@@ -38,7 +51,7 @@ final class LoopPlayer: AVQueuePlayer {
         
         super.init(items: items)
         items.forEach { managedItemIDs.insert(ObjectIdentifier($0)) }
-        observe()
+        startObserving()
     }
     
     override init() {
@@ -46,10 +59,11 @@ final class LoopPlayer: AVQueuePlayer {
     }
     
     deinit {
-        unobserve()
+        stopObserving()
     }
     
     override func play() {
+        rateCorrections = 0
         super.play()
         // play() starts at defaultRate, this covers the case that it does not
         if rate != playbackRate {
@@ -83,17 +97,31 @@ extension LoopPlayer {
 // MARK: - Observers
 private extension LoopPlayer {
     
-    func observe() {
+    func startObserving() {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(playerItemDidFinish(_:)),
                                                name: NSNotification.Name.AVPlayerItemDidPlayToEndTime,
                                                object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(playerRateDidChange(_:)),
+                                               name: AVPlayer.rateDidChangeNotification,
+                                               object: self)
+        currentItemObservation = observe(\.currentItem, options: [.new]) { [weak self] _, _ in
+            DispatchQueue.main.async {
+                self?.currentItemDidChange()
+            }
+        }
     }
     
-    func unobserve() {
+    func stopObserving() {
         NotificationCenter.default.removeObserver(self,
                                                   name: NSNotification.Name.AVPlayerItemDidPlayToEndTime,
                                                   object: nil)
+        NotificationCenter.default.removeObserver(self,
+                                                  name: AVPlayer.rateDidChangeNotification,
+                                                  object: self)
+        currentItemObservation?.invalidate()
+        currentItemObservation = nil
     }
     
     @objc
@@ -116,10 +144,37 @@ private extension LoopPlayer {
         guard let itemCopy = finishedItem.copy() as? AVPlayerItem else { return }
         managedItemIDs.insert(ObjectIdentifier(itemCopy))
         insert(itemCopy, after: nil)
-        // Keep the speed across the change to the next item
-        if rate != 0 && rate != playbackRate {
-            rate = playbackRate
+        enforcePlaybackRate(because: "item finished")
+    }
+    
+    @objc
+    func playerRateDidChange(_ notification: Notification) {
+        let reason = String(describing: notification.userInfo ?? [:])
+        DispatchQueue.main.async { [weak self] in
+            self?.enforcePlaybackRate(because: reason)
         }
+    }
+    
+    func currentItemDidChange() {
+        rateCorrections = 0
+        if let item = currentItem, loggedItems < Constant.loggedItems {
+            loggedItems += 1
+            Log.trace("player: item started, rate \(rate), wanted \(playbackRate), "
+                + "slowForward \(item.canPlaySlowForward), fastForward \(item.canPlayFastForward)")
+        }
+        enforcePlaybackRate(because: "item started")
+    }
+    
+    // AVQueuePlayer and AVKit can change the rate on their own, for example when the next item starts
+    func enforcePlaybackRate(because reason: String) {
+        guard rate != 0, rate != playbackRate, rateCorrections <= Constant.maxRateCorrections else { return }
+        rateCorrections += 1
+        guard rateCorrections <= Constant.maxRateCorrections else {
+            Log.trace("player: rate stays at \(rate) instead of \(playbackRate), \(reason)")
+            return
+        }
+        Log.trace("player: rate was \(rate), set to \(playbackRate), \(reason)")
+        rate = playbackRate
     }
 }
 

@@ -32,6 +32,8 @@ struct Database {
              Key.playbackRate: 1.0
              ]
         )
+        // The Options sheet usually runs in another process, make sure its changes are visible here
+        database.synchronize()
 
         return database
     }

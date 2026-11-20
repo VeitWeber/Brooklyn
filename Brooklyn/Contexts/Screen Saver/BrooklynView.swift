@@ -24,6 +24,8 @@ final class BrooklynView: ScreenSaverView {
         static let previewMaxSize = NSSize(width: 400, height: 300)
         // How often animateOneFrame() re-checks the video layout
         static let layoutCheckInterval: TimeInterval = 0.5
+        // How often a running view looks for changed options
+        static let settingsCheckInterval: TimeInterval = 1.0
     }
     
     // MARK: Outlets
@@ -33,6 +35,7 @@ final class BrooklynView: ScreenSaverView {
     // Built in startAnimation() and released in stopAnimation(), so every run starts
     // with a full queue and with the settings that are saved at that moment
     private var manager: BrooklynManager?
+    private var settingsTimer: Timer?
     // What layoutVideoLayer() applied last, to skip unchanged layouts
     private var appliedVideoFrame = NSRect.null
     private var appliedContentsScale: CGFloat = 0
@@ -102,9 +105,33 @@ extension BrooklynView {
     
     override func startAnimation() {
         // A duplicate call must not restart a player that is already running
-        guard manager == nil else { return }
+        guard manager == nil else {
+            applyStoredSettings()
+            return
+        }
         super.startAnimation()
         trace("startAnimation")
+        buildPlayer()
+        startSettingsTimer()
+    }
+    
+    override func stopAnimation() {
+        guard let manager = manager else { return }
+        trace("stopAnimation")
+        settingsTimer?.invalidate()
+        settingsTimer = nil
+        manager.player.pause()
+        manager.player.stop()
+        videoLayer.player = nil
+        self.manager = nil
+        super.stopAnimation()
+    }
+}
+
+// MARK: - Settings
+private extension BrooklynView {
+    
+    func buildPlayer() {
         let newManager = BrooklynManager(mode: .screensaver)
         manager = newManager
         videoLayer.player = newManager.player
@@ -112,14 +139,31 @@ extension BrooklynView {
         newManager.player.play()
     }
     
-    override func stopAnimation() {
+    func startSettingsTimer() {
+        settingsTimer?.invalidate()
+        let timer = Timer(timeInterval: Constant.settingsCheckInterval, repeats: true) { [weak self] _ in
+            self?.applyStoredSettings()
+        }
+        // Common modes, so it also fires while a sheet or a menu is tracking events
+        RunLoop.main.add(timer, forMode: .common)
+        settingsTimer = timer
+    }
+    
+    // The Options sheet belongs to another view, usually in another process, and the host does not
+    // restart running views when it closes. Checking the stored settings makes changes apply at once.
+    func applyStoredSettings() {
         guard let manager = manager else { return }
-        trace("stopAnimation")
-        manager.player.pause()
-        manager.player.stop()
-        videoLayer.player = nil
-        self.manager = nil
-        super.stopAnimation()
+        let stored = BrooklynManager.Settings.stored
+        let current = manager.settings
+        guard stored != current else { return }
+        trace("settings changed: \(stored)")
+        if stored.differsOnlyInPlaybackRate(from: current) {
+            manager.adopt(playbackRate: stored.playbackRate)
+        } else {
+            manager.player.pause()
+            manager.player.stop()
+            buildPlayer()
+        }
     }
 }
 
