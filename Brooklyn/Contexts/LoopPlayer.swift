@@ -15,6 +15,17 @@ final class LoopPlayer: AVQueuePlayer {
     // so we can filter out AVPlayerItemDidPlayToEndTime notifications from other
     // LoopPlayer instances (e.g. screensaver preview + main display, multi-monitor).
     private var managedItemIDs: Set<ObjectIdentifier> = []
+    
+    // Speed of everything this player plays. A running player switches at once,
+    // a paused one uses it the next time play() is called.
+    var playbackRate: Float = 1.0 {
+        didSet {
+            defaultRate = playbackRate
+            if rate != 0 {
+                rate = playbackRate
+            }
+        }
+    }
 
     // MARK: Lifecycle
     init(items: [Animation], numberOfLoops: Int, shouldRandomize: Bool) {
@@ -36,6 +47,14 @@ final class LoopPlayer: AVQueuePlayer {
     
     deinit {
         unobserve()
+    }
+    
+    override func play() {
+        super.play()
+        // play() starts at defaultRate, this covers the case that it does not
+        if rate != playbackRate {
+            rate = playbackRate
+        }
     }
 }
 
@@ -97,6 +116,10 @@ private extension LoopPlayer {
         guard let itemCopy = finishedItem.copy() as? AVPlayerItem else { return }
         managedItemIDs.insert(ObjectIdentifier(itemCopy))
         insert(itemCopy, after: nil)
+        // Keep the speed across the change to the next item
+        if rate != 0 && rate != playbackRate {
+            rate = playbackRate
+        }
     }
 }
 

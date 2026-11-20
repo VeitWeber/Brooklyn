@@ -25,6 +25,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate {
     @IBOutlet private weak var randomOrderCheckBox: NSButton!
     @IBOutlet private weak var numberOfLoopsPopUp: NSPopUpButton!
     @IBOutlet private weak var currentVersionButton: NSButton!
+    @IBOutlet private weak var speedSlider: NSSlider!
+    @IBOutlet private weak var speedValueLabel: NSTextField!
     
     // MARK: Private Properties
     private let manager = BrooklynManager(mode: .preferences)
@@ -80,7 +82,16 @@ private extension PreferencesWindowController {
     func setupButtons() {
         numberOfLoopsPopUp.selectItem(at: manager.numberOfLoops)
         randomOrderCheckBox.state = manager.hasRandomOrder ? .on : .off
+        speedSlider.minValue = BrooklynManager.playbackRateRange.lowerBound
+        speedSlider.maxValue = BrooklynManager.playbackRateRange.upperBound
+        updateSpeedControls()
         currentVersionButton.attributedTitle = NSAttributedString(string: "\(Localizations.Preferences.version) \(manager.currentVersion)")
+    }
+    
+    // Shows the stored step, so the knob snaps to steps of 0.1
+    func updateSpeedControls() {
+        speedSlider.doubleValue = manager.playbackRate
+        speedValueLabel.stringValue = String(format: "%.1fx", locale: Locale.current, manager.playbackRate)
     }
 }
 
@@ -134,6 +145,11 @@ private extension PreferencesWindowController {
     
     @IBAction func randomOrderAction(_ sender: NSButton) {
         manager.toogleHasRandomOrder()
+    }
+    
+    @IBAction func speedAction(_ sender: NSSlider) {
+        manager.setPlaybackRate(to: sender.doubleValue)
+        updateSpeedControls()
     }
     
     @IBAction func helpAction(_ sender: NSButton) {

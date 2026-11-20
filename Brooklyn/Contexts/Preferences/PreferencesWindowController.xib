@@ -15,6 +15,8 @@
                 <outlet property="numberOfLoopsPopUp" destination="tdt-p9-Ns2" id="AvT-vs-t20"/>
                 <outlet property="previewLabel" destination="g1H-Cn-yWz" id="a8v-H1-pga"/>
                 <outlet property="randomOrderCheckBox" destination="dkX-KT-WfU" id="yn2-b3-EHg"/>
+                <outlet property="speedSlider" destination="SpS-li-D3r" id="SpO-ut-L1t"/>
+                <outlet property="speedValueLabel" destination="SpV-al-U3e" id="SpO-ut-L2t"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="DNn-go-pBJ"/>
             </connections>
         </customObject>
@@ -305,8 +307,41 @@ DQ
                             </userDefinedRuntimeAttributes>
                         </textFieldCell>
                     </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="SpL-ab-E1l">
+                        <rect key="frame" x="432" y="177" width="107" height="16"/>
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="Animation Speed" id="SpL-ce-L1l">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="SpS-li-D3r">
+                        <rect key="frame" x="549" y="171" width="187" height="28"/>
+                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="2" doubleValue="1" tickMarkPosition="above" sliderType="linear" id="SpS-ce-L1l"/>
+                        <connections>
+                            <action selector="speedAction:" target="-2" id="SpA-ct-I1n"/>
+                        </connections>
+                    </slider>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="SpV-al-U3e">
+                        <rect key="frame" x="744" y="177" width="44" height="16"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="40" id="SpW-id-T1h"/>
+                        </constraints>
+                        <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="1.0x" id="SpV-ce-L1l">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
                 <constraints>
+                    <constraint firstItem="SpL-ab-E1l" firstAttribute="top" secondItem="U06-cj-0bE" secondAttribute="bottom" constant="16" id="SpC-o1-N1s"/>
+                    <constraint firstItem="SpL-ab-E1l" firstAttribute="leading" secondItem="U06-cj-0bE" secondAttribute="leading" id="SpC-o2-N2s"/>
+                    <constraint firstItem="SpS-li-D3r" firstAttribute="leading" secondItem="SpL-ab-E1l" secondAttribute="trailing" constant="12" id="SpC-o3-N3s"/>
+                    <constraint firstItem="SpS-li-D3r" firstAttribute="centerY" secondItem="SpL-ab-E1l" secondAttribute="centerY" id="SpC-o4-N4s"/>
+                    <constraint firstItem="SpV-al-U3e" firstAttribute="leading" secondItem="SpS-li-D3r" secondAttribute="trailing" constant="8" id="SpC-o5-N5s"/>
+                    <constraint firstItem="SpV-al-U3e" firstAttribute="centerY" secondItem="SpL-ab-E1l" secondAttribute="centerY" id="SpC-o6-N6s"/>
+                    <constraint firstItem="SpV-al-U3e" firstAttribute="trailing" secondItem="dkX-KT-WfU" secondAttribute="trailing" id="SpC-o7-N7s"/>
                     <constraint firstItem="d8w-bT-mmB" firstAttribute="leading" secondItem="tdt-p9-Ns2" secondAttribute="trailing" constant="4" id="00x-4O-WQ9"/>
                     <constraint firstItem="w0R-LT-WzY" firstAttribute="trailing" secondItem="AJd-fC-cWE" secondAttribute="trailing" id="0Y4-w3-dZe"/>
                     <constraint firstItem="Gwy-W7-7Lu" firstAttribute="leading" secondItem="U06-cj-0bE" secondAttribute="leading" id="1m7-ck-rHR"/>
@@ -316,7 +351,7 @@ DQ
                     <constraint firstItem="U06-cj-0bE" firstAttribute="top" secondItem="fah-n6-w7f" secondAttribute="bottom" constant="16" id="5MU-VX-vNh"/>
                     <constraint firstItem="BKJ-de-W2J" firstAttribute="centerY" secondItem="Gwy-W7-7Lu" secondAttribute="centerY" id="613-IO-FmG"/>
                     <constraint firstItem="HtL-Vo-NVn" firstAttribute="top" secondItem="v9R-f2-GEx" secondAttribute="bottom" constant="16" id="7Wz-Wd-93I"/>
-                    <constraint firstItem="l6l-ao-xLf" firstAttribute="top" secondItem="U06-cj-0bE" secondAttribute="bottom" constant="16" id="8S5-z8-mEj"/>
+                    <constraint firstItem="l6l-ao-xLf" firstAttribute="top" secondItem="SpL-ab-E1l" secondAttribute="bottom" constant="16" id="8S5-z8-mEj"/>
                     <constraint firstItem="HtL-Vo-NVn" firstAttribute="top" secondItem="czd-mF-Tcj" secondAttribute="bottom" constant="16" id="BGF-TO-eqv"/>
                     <constraint firstItem="w0R-LT-WzY" firstAttribute="leading" secondItem="AJd-fC-cWE" secondAttribute="leading" id="Blb-qq-eaQ"/>
                     <constraint firstItem="m6K-4m-9AI" firstAttribute="top" secondItem="v9R-f2-GEx" secondAttribute="top" id="Bln-ex-cD2"/>

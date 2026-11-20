@@ -18,6 +18,7 @@ final class BrooklynManager {
     }
     
     // MARK: Properties
+    static let playbackRateRange: ClosedRange<Double> = 0.1...2.0
     let availableAnimations: [Animation]
     let player: LoopPlayer
     
@@ -25,6 +26,7 @@ final class BrooklynManager {
     private(set) var selectedAnimations: [Animation]
     private(set) var numberOfLoops: Int
     private(set) var hasRandomOrder: Bool
+    private(set) var playbackRate: Double
     
     // MARK: Init
     init(mode: DisplayMode) {
@@ -32,6 +34,7 @@ final class BrooklynManager {
         self.selectedAnimations = Database.standard.selectedAnimations
         self.numberOfLoops = Database.standard.numberOfLoops
         self.hasRandomOrder = Database.standard.hasRandomOrder
+        self.playbackRate = BrooklynManager.normalized(playbackRate: Database.standard.playbackRate)
         
         switch mode {
         case .screensaver:
@@ -43,6 +46,7 @@ final class BrooklynManager {
                                      numberOfLoops: 0,
                                      shouldRandomize: false)
         }
+        player.playbackRate = Float(playbackRate)
     }
     
     lazy var currentVersion: String = {
@@ -79,5 +83,21 @@ extension BrooklynManager {
     func toogleHasRandomOrder() {
         hasRandomOrder.toggle()
         Database.standard.set(hasRandomOrder: hasRandomOrder)
+    }
+    
+    func setPlaybackRate(to playbackRate: Double) {
+        let normalizedRate = BrooklynManager.normalized(playbackRate: playbackRate)
+        // The slider reports continuously, only a new step is stored and applied
+        guard normalizedRate != self.playbackRate else { return }
+        self.playbackRate = normalizedRate
+        Database.standard.set(playbackRate: normalizedRate)
+        player.playbackRate = Float(normalizedRate)
+    }
+    
+    // Steps of 0.1 inside the supported range, a missing or broken value means normal speed
+    static func normalized(playbackRate: Double) -> Double {
+        guard playbackRate.isFinite, playbackRate > 0 else { return 1.0 }
+        let steppedRate = (playbackRate * 10).rounded() / 10
+        return min(max(steppedRate, playbackRateRange.lowerBound), playbackRateRange.upperBound)
     }
 }
