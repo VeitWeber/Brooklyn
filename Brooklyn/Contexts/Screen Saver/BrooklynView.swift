@@ -9,6 +9,7 @@
 import Foundation
 import ScreenSaver
 import AVKit
+import os.log
 
 // MARK: - BrooklynView
 final class BrooklynView: ScreenSaverView {
@@ -21,6 +22,8 @@ final class BrooklynView: ScreenSaverView {
         static let backgroundColor = NSColor(red: 0.00, green: 0.01, blue: 0.00, alpha:1.0)
         // The preview in System Settings is a small thumbnail, a real screen is always larger
         static let previewMaxSize = NSSize(width: 400, height: 300)
+        // How often animateOneFrame() re-checks the video layout
+        static let layoutCheckInterval: TimeInterval = 0.5
     }
     
     // MARK: Outlets
@@ -30,6 +33,11 @@ final class BrooklynView: ScreenSaverView {
     // Built in startAnimation() and released in stopAnimation(), so every run starts
     // with a full queue and with the settings that are saved at that moment
     private var manager: BrooklynManager?
+    // What layoutVideoLayer() applied last, to skip unchanged layouts
+    private var appliedVideoFrame = NSRect.null
+    private var appliedContentsScale: CGFloat = 0
+    private static let log = OSLog(subsystem: Bundle(for: BrooklynView.self).bundleIdentifier ?? "Brooklyn",
+                                   category: "view")
     private lazy var preferences = PreferencesWindowController(windowNibName: PreferencesWindowController.identifier)
 
     // MARK: Initialization
@@ -59,17 +67,33 @@ final class BrooklynView: ScreenSaverView {
         // run would leave another instance decoding video in the background. Ending the
         // host process is the established workaround, macOS starts a new host the next
         // time the screen saver runs. exit(0) cannot be vetoed or delayed, unlike terminate(_:).
-        guard isFullSizeInstance else { return }
-        exit(0)
+        guard Static.isSystemSettingsRunning else {
+            trace("willStop: ending the host process")
+            exit(0)
+        }
+        // System Settings uses the same kind of host for its preview and for the Options sheet.
+        // Ending a host while System Settings is open can leave the Options button dead until
+        // System Settings is relaunched, so playback is only stopped here. The host is ended
+        // the next time the screen saver stops while System Settings is closed.
+        trace("willStop: System Settings is open, keeping the host process")
+        if isLargerThanPreview {
+            stopAnimation()
+        }
     }
     
-    // isPreview is not reliable under legacyScreenSaver (FB7486243: always true on some
-    // releases, wrong in other ways since macOS 26), so every view larger than the
-    // thumbnail in System Settings counts as the real screen saver as well.
-    private var isFullSizeInstance: Bool {
-        let isLargerThanPreview = bounds.width > Constant.previewMaxSize.width
-            && bounds.height > Constant.previewMaxSize.height
-        return !isPreview || isLargerThanPreview
+    // The thumbnail in System Settings keeps playing, everything larger is a full screen.
+    // This goes by size because isPreview is not reliable under legacyScreenSaver (FB7486243).
+    private var isLargerThanPreview: Bool {
+        let size = videoFrame.size
+        return size.width > Constant.previewMaxSize.width && size.height > Constant.previewMaxSize.height
+    }
+    
+    private static var isSystemSettingsRunning: Bool {
+        let identifiers = ["com.apple.systempreferences", "com.apple.Preferences"]
+        return NSWorkspace.shared.runningApplications.contains { application in
+            guard let identifier = application.bundleIdentifier else { return false }
+            return identifiers.contains(identifier)
+        }
     }
 }
 
@@ -80,14 +104,17 @@ extension BrooklynView {
         // A duplicate call must not restart a player that is already running
         guard manager == nil else { return }
         super.startAnimation()
+        trace("startAnimation")
         let newManager = BrooklynManager(mode: .screensaver)
         manager = newManager
         videoLayer.player = newManager.player
+        layoutVideoLayer()
         newManager.player.play()
     }
     
     override func stopAnimation() {
         guard let manager = manager else { return }
+        trace("stopAnimation")
         manager.player.pause()
         manager.player.stop()
         videoLayer.player = nil
@@ -101,12 +128,20 @@ private extension BrooklynView {
     
     func configure() {
         defineLayer()
+        // animateOneFrame() is only used to re-check the layout
+        animationTimeInterval = Constant.layoutCheckInterval
     }
     
     func defineLayer() {
+        // Layer-hosting view: AppKit keeps the root layer in sync with the view, the video is a
+        // sublayer that layoutVideoLayer() places, independent of the frame the view was created with
+        let rootLayer = CALayer()
+        rootLayer.backgroundColor = Constant.backgroundColor.cgColor
+        layer = rootLayer
         wantsLayer = true
         defineVideoLayer()
-        layer = videoLayer
+        rootLayer.addSublayer(videoLayer)
+        layoutVideoLayer()
     }
 }
 
@@ -114,11 +149,91 @@ private extension BrooklynView {
 private extension BrooklynView {
 
     func defineVideoLayer() {
-        videoLayer.frame = bounds
-        videoLayer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
-        videoLayer.needsDisplayOnBoundsChange = true
-        videoLayer.contentsGravity = .resizeAspect
+        videoLayer.videoGravity = .resizeAspect
         videoLayer.backgroundColor = Constant.backgroundColor.cgColor
+    }
+}
+
+// MARK: - Layout
+extension BrooklynView {
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        layoutVideoLayer()
+    }
+    
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        layoutVideoLayer()
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        layoutVideoLayer()
+    }
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+        layoutVideoLayer()
+    }
+    
+    override func animateOneFrame() {
+        // Catches changes that none of the callbacks above report, e.g. a resized window
+        layoutVideoLayer()
+    }
+}
+
+private extension BrooklynView {
+    
+    // legacyScreenSaver can create the view with a frame that does not belong to its display
+    // and never corrects it. The window does match the display, so the video fills the window.
+    var videoFrame: NSRect {
+        guard let contentView = window?.contentView else { return bounds }
+        let windowFrame = convert(contentView.bounds, from: contentView)
+        // The preview thumbnail keeps its own bounds in case its window is larger than the thumbnail
+        let isThumbnail = bounds.width <= Constant.previewMaxSize.width
+            && bounds.height <= Constant.previewMaxSize.height
+        if isPreview && isThumbnail && windowFrame.contains(bounds) {
+            return bounds
+        }
+        return windowFrame
+    }
+    
+    func layoutVideoLayer() {
+        let targetFrame = videoFrame
+        let scale = window?.backingScaleFactor ?? 1.0
+        guard targetFrame != appliedVideoFrame || scale != appliedContentsScale else { return }
+        appliedVideoFrame = targetFrame
+        appliedContentsScale = scale
+        
+        // Without implicit animation, the video would visibly slide into place otherwise
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        videoLayer.frame = targetFrame
+        videoLayer.contentsScale = scale
+        layer?.contentsScale = scale
+        CATransaction.commit()
+        
+        logLayout()
+    }
+    
+    func logLayout() {
+        var windowFrame = "none"
+        var screenFrame = "none"
+        if let window = window {
+            windowFrame = NSStringFromRect(window.frame)
+            if let screen = window.screen {
+                screenFrame = NSStringFromRect(screen.frame)
+            }
+        }
+        trace("layout: video=\(NSStringFromRect(appliedVideoFrame)) view=\(NSStringFromRect(frame)) "
+            + "window=\(windowFrame) screen=\(screenFrame) scale=\(appliedContentsScale) preview=\(isPreview)")
+    }
+    
+    // A few lines per run that show what the host does with the view:
+    // log show --last 10m --predicate 'subsystem CONTAINS "brooklyn"'
+    func trace(_ message: String) {
+        os_log("%{public}@", log: Static.log, type: .default, message)
     }
 }
 
@@ -130,6 +245,7 @@ extension BrooklynView {
     }
 
     override var configureSheet: NSWindow? {
+        trace("configureSheet requested")
         let sheet = preferences.window
         preferences.resumePreview()
         return sheet

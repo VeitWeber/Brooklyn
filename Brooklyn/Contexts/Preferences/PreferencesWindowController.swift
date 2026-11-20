@@ -156,6 +156,11 @@ private extension PreferencesWindowController {
         animationsTableView.deselectAll(nil)
         manager.player.pause()
         guard let window = window else { return }
-        window.sheetParent?.endSheet(window)
+        if let sheetParent = window.sheetParent {
+            sheetParent.endSheet(window)
+        } else {
+            // Not presented as a sheet by this host
+            window.close()
+        }
     }
 }
