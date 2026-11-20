@@ -33,9 +33,6 @@ Version `2.3.0` builds on iF2007's `2.2.0` and was written for macOS 27:
 * **Options sheet.** The preview stops playing when the sheet is closed.
 * **Project.** Deployment target macOS 14.0, Swift 5 for all targets, bundle identifier typo fixed (`com.pedrommcarrasco.brooklyn`), the original author's signing team removed, in-app links point to this fork, unused Sparkle keys and the leftover Travis CI and CocoaPods files removed.
 
-> [!IMPORTANT]
-> These changes have not been built or tested on a Mac yet. Build the screen saver and check its behaviour before relying on it.
-
 ## Installation 📦
 
 This fork does not publish a prebuilt binary, so the screen saver is built from source with Xcode.
