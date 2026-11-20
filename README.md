@@ -18,6 +18,7 @@
 * Select which animations you want to see
 * Loop each animation how many times you want
 * Make the animations' order random
+* Set the playback speed from 0.1x to 2.0x
 
 <p align="center">
     <img src="Design/preferenceMenu.png" alt="Example"/>
@@ -27,11 +28,13 @@
 
 Version `2.3.0` builds on iF2007's `2.2.0` and was written for macOS 27:
 
-* **Playback restarts cleanly.** The player is rebuilt whenever the screen saver starts. Before, stopping emptied the queue, so a restart on the same view (the preview in System Settings) stayed black. Changed options now also apply on the next start.
+* **Playback restarts cleanly.** The player is rebuilt whenever the screen saver starts. Before, stopping emptied the queue, so a restart on the same view (the preview in System Settings) stayed black. Running views check the stored options once a second, so changes apply right away.
 * **Looping re-queues the right clip.** The clip that actually finished is appended again, and the queue is only changed on the main thread.
-* **Background instances are ended more reliably.** When the screen saver stops, the host process is ended with `exit(0)`. Full-size views are covered even when macOS reports `isPreview` incorrectly.
+* **Background instances are ended more reliably.** When the screen saver stops, the host process is ended with `exit(0)`. Only the host that shows the preview in System Settings is kept while System Settings is open, so the Options button keeps working.
+* **Video layout.** The video is laid out against the window instead of the frame the view was created with, which can belong to another display.
+* **Playback speed.** A slider in the options sets the speed of the animations from 0.1x to 2.0x, the preview in the sheet follows it.
 * **Options sheet.** The preview stops playing when the sheet is closed.
-* **Project.** Deployment target macOS 14.0, Swift 5 for all targets, bundle identifier typo fixed (`com.pedrommcarrasco.brooklyn`), the original author's signing team removed, in-app links point to this fork, unused Sparkle keys and the leftover Travis CI and CocoaPods files removed.
+* **Project.** Deployment target macOS 14.0, Swift 5 for all targets, bundle identifier typo fixed (`com.pedrommcarrasco.brooklyn`), the original author's signing team removed, in-app links point to this fork, a link to pikodat.com added, unused Sparkle keys and the leftover Travis CI and CocoaPods files removed.
 
 ## Installation 📦
 

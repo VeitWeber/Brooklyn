@@ -14,6 +14,7 @@ enum URLType: String {
     case github = "https://github.com/VeitWeber/Brooklyn"
     case twitter = "https://twitter.com/pedrommcarrasco"
     case version = "https://github.com/VeitWeber/Brooklyn/releases"
+    case website = "https://pikodat.com"
 }
 
 // MARK: Functions

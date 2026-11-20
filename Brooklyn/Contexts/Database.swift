@@ -16,6 +16,7 @@ struct Database {
         static let selectedAnimations = "selectedAnimations"
         static let numberOfLoops = "numberOfLoops"
         static let randomOrder = "randomOrder"
+        static let playbackRate = "playbackRate"
     }
 
     // MARK: Properties
@@ -27,9 +28,12 @@ struct Database {
         database.register(defaults:
             [Key.selectedAnimations: [Animation.original.rawValue],
              Key.numberOfLoops: 0,
-             Key.randomOrder: false
+             Key.randomOrder: false,
+             Key.playbackRate: 1.0
              ]
         )
+        // The Options sheet usually runs in another process, make sure its changes are visible here
+        database.synchronize()
 
         return database
     }
@@ -62,6 +66,14 @@ extension ScreenSaverDefaults {
     
     func set(hasRandomOrder: Bool) {
         set(hasRandomOrder, for: Database.Key.randomOrder)
+    }
+    
+    var playbackRate: Double {
+        return double(forKey: Database.Key.playbackRate)
+    }
+    
+    func set(playbackRate: Double) {
+        set(playbackRate, for: Database.Key.playbackRate)
     }
 }
 
