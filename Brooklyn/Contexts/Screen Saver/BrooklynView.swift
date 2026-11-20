@@ -70,19 +70,24 @@ final class BrooklynView: ScreenSaverView {
         // run would leave another instance decoding video in the background. Ending the
         // host process is the established workaround, macOS starts a new host the next
         // time the screen saver runs. exit(0) cannot be vetoed or delayed, unlike terminate(_:).
-        guard Static.isSystemSettingsRunning else {
+        // A host that stays alive also keeps the code and the settings it started with, so
+        // options changed in System Settings only reach the screen saver in a new host.
+        guard Static.hostsPreview && Static.isSystemSettingsRunning else {
             trace("willStop: ending the host process")
             exit(0)
         }
-        // System Settings uses the same kind of host for its preview and for the Options sheet.
-        // Ending a host while System Settings is open can leave the Options button dead until
-        // System Settings is relaunched, so playback is only stopped here. The host is ended
-        // the next time the screen saver stops while System Settings is closed.
-        trace("willStop: System Settings is open, keeping the host process")
+        // This host shows the thumbnail in System Settings and owns the Options sheet. Ending it
+        // can leave the Options button dead until System Settings is relaunched, so it only
+        // stops playing on its full-size views.
+        trace("willStop: this host shows the preview, keeping it")
         if isLargerThanPreview {
             stopAnimation()
         }
     }
+    
+    // Set once a view of this process is shown at thumbnail size. System Settings runs its
+    // preview in a host of its own, the host of the real screen saver only has full-size views.
+    private static var hostsPreview = false
     
     // The thumbnail in System Settings keeps playing, everything larger is a full screen.
     // This goes by size because isPreview is not reliable under legacyScreenSaver (FB7486243).
@@ -243,7 +248,20 @@ private extension BrooklynView {
         return windowFrame
     }
     
+    // In a window at thumbnail size, which is the preview in System Settings
+    var showsPreviewThumbnail: Bool {
+        guard window != nil else { return false }
+        return [bounds.size, videoFrame.size].contains { size in
+            size.width > 0 && size.height > 0
+                && size.width <= Constant.previewMaxSize.width && size.height <= Constant.previewMaxSize.height
+        }
+    }
+    
     func layoutVideoLayer() {
+        if !Static.hostsPreview && showsPreviewThumbnail {
+            Static.hostsPreview = true
+            trace("this host shows the preview")
+        }
         let targetFrame = videoFrame
         let scale = window?.backingScaleFactor ?? 1.0
         guard targetFrame != appliedVideoFrame || scale != appliedContentsScale else { return }
